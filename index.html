@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jack & Zosim's Stag Do</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Playfair+Display:wght@700;900&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --pink: #ff2d87;
+    --orange: #ff6b35;
+    --purple: #7b2ff7;
+    --dark: #1a0a2e;
+    --gold: #ffd700;
+    --card-bg: rgba(255,255,255,0.08);
+    --card-border: rgba(255,255,255,0.15);
+  }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--dark);
+    color: #fff;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ===== Floating Particles Background ===== */
+  .particles {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .particle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0;
+    animation: floatUp linear infinite;
+  }
+
+  @keyframes floatUp {
+    0% { opacity: 0; transform: translateY(100vh) scale(0); }
+    10% { opacity: 0.6; }
+    90% { opacity: 0.6; }
+    100% { opacity: 0; transform: translateY(-10vh) scale(1); }
+  }
+
+  /* ===== Confetti Canvas ===== */
+  #confetti-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  /* ===== Hero Section ===== */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem 1.5rem;
+    background: linear-gradient(135deg, var(--purple) 0%, var(--pink) 50%, var(--orange) 100%);
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle at 30% 40%, rgba(255,255,255,0.08) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(255,215,0,0.06) 0%, transparent 50%);
+    animation: shimmer 8s ease-in-out infinite alternate;
+  }
+
+  @keyframes shimmer {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    100% { transform: translate(-5%, -5%) rotate(3deg); }
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-emoji {
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    animation: bounce 2s ease-in-out infinite;
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+  }
+
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.5rem, 8vw, 5rem);
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 4px 30px rgba(0,0,0,0.3);
+  }
+
+  .hero h1 .ampersand {
+    color: var(--gold);
+    font-size: 0.8em;
+  }
+
+  .hero .subtitle {
+    font-size: clamp(1.2rem, 4vw, 2rem);
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    opacity: 0.9;
+  }
+
+  .hero .dates {
+    font-size: clamp(1rem, 3vw, 1.3rem);
+    font-weight: 600;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    padding: 0.75rem 2rem;
+    border-radius: 50px;
+    border: 1px solid rgba(255,255,255,0.25);
+    display: inline-block;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.9rem;
+    opacity: 0.7;
+    animation: fadeUpDown 2s ease-in-out infinite;
+  }
+
+  @keyframes fadeUpDown {
+    0%, 100% { opacity: 0.4; transform: translateX(-50%) translateY(0); }
+    50% { opacity: 0.8; transform: translateX(-50%) translateY(-8px); }
+  }
+
+  /* ===== Main Content ===== */
+  .content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 1.5rem 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ===== Day Header ===== */
+  .day-header {
+    text-align: center;
+    padding: 4rem 0 2rem;
+    position: relative;
+  }
+
+  .day-number {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--pink), var(--orange));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .day-date {
+    font-size: 1.1rem;
+    opacity: 0.8;
+    margin-top: 0.3rem;
+  }
+
+  .costume-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 1rem;
+    padding: 0.6rem 1.5rem;
+    background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,107,53,0.2));
+    border: 1px solid rgba(255,215,0,0.4);
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .costume-detail {
+    font-size: 0.85rem;
+    opacity: 0.7;
+    margin-top: 0.5rem;
+  }
+
+  .meet-note {
+    margin-top: 0.6rem;
+    font-size: 0.9rem;
+    opacity: 0.6;
+    font-style: italic;
+  }
+
+  /* ===== Timeline ===== */
+  .timeline {
+    position: relative;
+    padding-left: 2rem;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(to bottom, var(--pink), var(--purple), var(--orange));
+    border-radius: 3px;
+  }
+
+  /* ===== Event Card ===== */
+  .event-card {
+    position: relative;
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    opacity: 1;
+    transform: none;
+  }
+
+  .event-card.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .event-card:hover {
+    border-color: rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.12);
+  }
+
+  .event-card::before {
+    content: '';
+    position: absolute;
+    left: -2.35rem;
+    top: 1.8rem;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--pink);
+    border: 3px solid var(--dark);
+    box-shadow: 0 0 12px var(--pink);
+    transition: box-shadow 0.3s, transform 0.3s;
+  }
+
+  .event-card:hover::before {
+    transform: scale(1.3);
+  }
+
+  .event-card:nth-child(2)::before { background: var(--orange); box-shadow: 0 0 12px var(--orange); }
+  .event-card:nth-child(3)::before { background: var(--purple); box-shadow: 0 0 12px var(--purple); }
+  .event-card:nth-child(4)::before { background: var(--gold); box-shadow: 0 0 12px var(--gold); }
+  .event-card:nth-child(5)::before { background: var(--pink); box-shadow: 0 0 12px var(--pink); }
+
+  .event-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .event-icon {
+    font-size: 2.2rem;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .event-meta {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .event-time {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+    margin-bottom: 0.2rem;
+  }
+
+  .event-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .event-venue {
+    font-size: 0.82rem;
+    opacity: 0.6;
+    margin-top: 0.15rem;
+  }
+
+  .event-venue a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 2px;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+  }
+
+  .event-venue a:hover {
+    opacity: 1;
+    color: var(--gold);
+  }
+
+  .event-desc {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    opacity: 0.8;
+    margin-bottom: 0.75rem;
+  }
+
+  .event-highlights {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .highlight-tag {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.65rem;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  /* ===== Action Buttons ===== */
+  .event-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.8rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #fff;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .action-btn:hover {
+    background: rgba(255,255,255,0.2);
+    border-color: rgba(255,255,255,0.35);
+    transform: translateY(-1px);
+  }
+
+  .action-btn.cal-btn {
+    background: linear-gradient(135deg, rgba(123,47,247,0.3), rgba(255,45,135,0.3));
+    border-color: rgba(123,47,247,0.5);
+  }
+
+  .action-btn.cal-btn:hover {
+    background: linear-gradient(135deg, rgba(123,47,247,0.5), rgba(255,45,135,0.5));
+  }
+
+  .action-btn.venue-btn {
+    background: rgba(255,215,0,0.1);
+    border-color: rgba(255,215,0,0.3);
+  }
+
+  .action-btn.venue-btn:hover {
+    background: rgba(255,215,0,0.25);
+  }
+
+  /* ===== Day Divider ===== */
+  .day-divider {
+    text-align: center;
+    padding: 3rem 0;
+    position: relative;
+  }
+
+  .day-divider::before {
+    content: '';
+    position: absolute;
+    left: 10%; right: 10%;
+    top: 50%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent);
+  }
+
+  .day-divider span {
+    position: relative;
+    background: var(--dark);
+    padding: 0 1.5rem;
+    font-size: 2rem;
+    letter-spacing: 0.3rem;
+  }
+
+  /* ===== Footer ===== */
+  .footer-section {
+    text-align: center;
+    padding: 3rem 1.5rem 4rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .footer-emoji {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .footer-card {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+  }
+
+  .footer-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+  }
+
+  .footer-card p {
+    font-size: 0.92rem;
+    line-height: 1.7;
+    opacity: 0.8;
+    margin-bottom: 0.5rem;
+  }
+
+  .footer-card p:last-child {
+    margin-bottom: 0;
+  }
+
+  .footer-card .whatsapp-note {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 1rem;
+    padding: 0.5rem 1.2rem;
+    background: rgba(37, 211, 102, 0.15);
+    border: 1px solid rgba(37, 211, 102, 0.3);
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .footer-tagline {
+    margin-top: 2rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    opacity: 0.5;
+  }
+
+  /* ===== Sparkle Animation ===== */
+  @keyframes sparkle {
+    0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+    50% { opacity: 1; transform: scale(1) rotate(180deg); }
+  }
+
+  .sparkle-container {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ===== Glow Pulse on Timeline Dots ===== */
+  @keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 8px currentColor; }
+    50% { box-shadow: 0 0 20px currentColor, 0 0 40px currentColor; }
+  }
+
+  .event-card.visible::before {
+    animation: glowPulse 3s ease-in-out infinite;
+  }
+
+  /* ===== Tilt on Hover ===== */
+  .event-card {
+    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.3s, background 0.3s;
+  }
+
+  /* ===== Mobile ===== */
+  @media (max-width: 600px) {
+    .timeline { padding-left: 1.5rem; }
+    .event-card::before { left: -1.85rem; width: 12px; height: 12px; }
+    .event-card { padding: 1.2rem; }
+    .event-icon { font-size: 1.8rem; }
+    .event-header { gap: 0.75rem; }
+    .hero-emoji { font-size: 2.5rem; gap: 0.4rem; }
+    .footer-card { padding: 1.5rem; }
+  }
+
+  /* ===== Print ===== */
+  @media print {
+    body { background: #fff; color: #1a0a2e; }
+    .hero { min-height: auto; padding: 2rem; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    .scroll-hint, #confetti-canvas, .particles, .sparkle-container { display: none !important; }
+    .event-card {
+      opacity: 1 !important;
+      transform: none !important;
+      background: #f8f0ff;
+      border: 1px solid #ddd;
+      break-inside: avoid;
+    }
+    .day-header { break-before: page; padding-top: 1rem; }
+    .day-header:first-of-type { break-before: auto; }
+    .timeline::before { background: #7b2ff7; }
+    .event-card::before { border-color: #fff; animation: none; }
+    .day-number { -webkit-text-fill-color: var(--pink); }
+    .event-time { color: var(--purple); }
+    .costume-badge { background: #fff5e0; border-color: #e0c060; }
+    .highlight-tag { background: #f0e8ff; border-color: #ccc; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Floating Particles Background -->
+<div class="particles" id="particles"></div>
+
+<!-- Confetti Canvas -->
+<canvas id="confetti-canvas"></canvas>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-emoji"><span>✈️</span><span>🎉</span><span>🏛️</span></div>
+    <h1>Jack <span class="ampersand">&</span> Zosim's</h1>
+    <div class="subtitle">Stag Do</div>
+    <div class="dates">2nd & 3rd May 2026 — London</div>
+  </div>
+  <div class="scroll-hint">↓ Scroll for the plan ↓</div>
+</section>
+
+<!-- Content -->
+<div class="content">
+
+  <!-- DAY 1 -->
+  <div class="day-header">
+    <div class="day-number">Day One</div>
+    <div class="day-date">Saturday 2nd May</div>
+    <div class="costume-badge">
+      <span>🏖️</span>
+      <span>Costume: Holiday Goers</span>
+      <span>✈️</span>
+    </div>
+    <div class="costume-detail">Grooms as Airplane Captain & Cabin Crew</div>
+    <div class="meet-note">Meet a bit earlier if you're traveling in!</div>
+  </div>
+
+  <div class="timeline">
+
+    <!-- Buff Bingo -->
+    <div class="event-card">
+      <div class="event-header">
+        <div class="event-icon">💃</div>
+        <div class="event-meta">
+          <div class="event-time">1pm – 5pm</div>
+          <div class="event-title">Buff Bingo Drag Brunch</div>
+          <div class="event-venue">Fire Club, Vauxhall · <a href="https://www.brunchfabulous.uk/buff-bingo-drag-brunch-ticketing" target="_blank" rel="noopener">View event</a></div>
+        </div>
+      </div>
+      <div class="event-desc">
+        Drag queens, bingo, buff butlers, and 90 mins of bottomless drinks. Some food included to keep you going. Bring your A-game.
+      </div>
+      <div class="event-highlights">
+        <span class="highlight-tag">🍾 Bottomless Drinks</span>
+        <span class="highlight-tag">🎤 Drag Show</span>
+        <span class="highlight-tag">🎯 Bingo</span>
+        <span class="highlight-tag">🍕 Food Included</span>
+      </div>
+      <div class="event-actions">
+        <a href="https://www.brunchfabulous.uk/buff-bingo-drag-brunch-ticketing" target="_blank" rel="noopener" class="action-btn venue-btn">🔗 Venue</a>
+        <button class="action-btn cal-btn" onclick="addToCalendar('Buff Bingo Drag Brunch','Fire Club, South Lambeth Road, Vauxhall, London','2026-05-02T13:00:00','2026-05-02T17:00:00','Drag queens, bingo, buff butlers & 90 mins bottomless drinks.')">📅 Add to Calendar</button>
+      </div>
+    </div>
+
+    <!-- Sky Lounge -->
+    <div class="event-card">
+      <div class="event-header">
+        <div class="event-icon">🌃</div>
+        <div class="event-meta">
+          <div class="event-time">Evening til 10pm</div>
+          <div class="event-title">Sky Lounge Party</div>
+          <div class="event-venue">Hale Works, Tottenham Hale, N17 9LG</div>
+        </div>
+      </div>
+      <div class="event-desc">
+        Dinner and party up on the 11th floor with views over the wetlands. Food, music, activities, and some saucy surprises...
+      </div>
+      <div class="event-highlights">
+        <span class="highlight-tag">🍽️ Dinner</span>
+        <span class="highlight-tag">🎶 Music</span>
+        <span class="highlight-tag">🎲 Activities</span>
+        <span class="highlight-tag">🌅 Skyline Views</span>
+      </div>
+      <div class="event-actions">
+        <button class="action-btn cal-btn" onclick="addToCalendar('Sky Lounge Party','Hale Works, Tottenham Hale, London N17 9LG','2026-05-02T18:00:00','2026-05-02T22:00:00','Dinner, music, activities & saucy surprises on the 11th floor.')">📅 Add to Calendar</button>
+      </div>
+    </div>
+
+    <!-- Soho & Heaven -->
+    <div class="event-card">
+      <div class="event-header">
+        <div class="event-icon">😈</div>
+        <div class="event-meta">
+          <div class="event-time">Late Night</div>
+          <div class="event-title">Soho → Heaven</div>
+          <div class="event-venue">Soho & Charing Cross · <a href="https://g-a-yandheaven.co.uk/" target="_blank" rel="noopener">Heaven</a></div>
+        </div>
+      </div>
+      <div class="event-desc">
+        Cocktails in Soho, then on to Heaven — the legendary club under the arches at Charing Cross. Multiple rooms, big tunes, been going since 1979.
+      </div>
+      <div class="event-highlights">
+        <span class="highlight-tag">🍹 Cocktails</span>
+        <span class="highlight-tag">🪩 Club Night</span>
+        <span class="highlight-tag">🏛️ Legendary Venue</span>
+      </div>
+      <div class="event-actions">
+        <a href="https://g-a-yandheaven.co.uk/" target="_blank" rel="noopener" class="action-btn venue-btn">🔗 Heaven</a>
+        <button class="action-btn cal-btn" onclick="addToCalendar('Soho Drinks & Heaven','Heaven, Villiers Street, Charing Cross, London WC2N 6NG','2026-05-02T22:30:00','2026-05-03T03:00:00','Cocktails in Soho then on to Heaven nightclub.')">📅 Add to Calendar</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Divider -->
+  <div class="day-divider"><span>😴 → 😎</span></div>
+
+  <!-- DAY 2 -->
+  <div class="day-header">
+    <div class="day-number">Day Two</div>
+    <div class="day-date">Sunday 3rd May</div>
+    <div class="costume-badge">
+      <span>🏛️</span>
+      <span>Costume: Greek Themed</span>
+      <span>⚡</span>
+    </div>
+    <div class="meet-note">Ease into it. Meet a bit earlier if you're traveling in!</div>
+  </div>
+
+  <div class="timeline">
+
+    <!-- Dalston Superstore -->
+    <div class="event-card">
+      <div class="event-header">
+        <div class="event-icon">🥂</div>
+        <div class="event-meta">
+          <div class="event-time">12pm</div>
+          <div class="event-title">Drag Brunch</div>
+          <div class="event-venue">Dalston Superstore, Kingsland High St · <a href="https://dalstonsuperstore.com/" target="_blank" rel="noopener">View venue</a></div>
+        </div>
+      </div>
+      <div class="event-desc">
+        A mimosa on arrival to get you going. Drag acts, games, and prizes while you tuck into the breakfast menu — eggs, bacon, waffles, loaded fries, and more to order. Exactly what the hangover ordered.
+      </div>
+      <div class="event-highlights">
+        <span class="highlight-tag">🥂 Mimosa</span>
+        <span class="highlight-tag">🎤 Drag Acts</span>
+        <span class="highlight-tag">🍳 Breakfast Menu</span>
+      </div>
+      <div class="event-actions">
+        <a href="https://dalstonsuperstore.com/" target="_blank" rel="noopener" class="action-btn venue-btn">🔗 Venue</a>
+        <button class="action-btn cal-btn" onclick="addToCalendar('Drag Brunch','Dalston Superstore, 117 Kingsland High Street, London E8 2PB','2026-05-03T12:00:00','2026-05-03T14:00:00','Mimosa on arrival, drag acts, games & breakfast menu.')">📅 Add to Calendar</button>
+      </div>
+    </div>
+
+    <!-- Flight Club -->
+    <div class="event-card">
+      <div class="event-header">
+        <div class="event-icon">🎯</div>
+        <div class="event-meta">
+          <div class="event-time">2:30pm – 4pm</div>
+          <div class="event-title">Flight Club Darts</div>
+          <div class="event-venue">Shoreditch · <a href="https://flightclubdarts.com/location-shoreditch" target="_blank" rel="noopener">View venue</a></div>
+        </div>
+      </div>
+      <div class="event-desc">
+        Social darts with auto-scoring so nobody cheats. No skill needed, just competitive spirit. Bars on site.
+      </div>
+      <div class="event-highlights">
+        <span class="highlight-tag">🎯 Social Darts</span>
+        <span class="highlight-tag">🍺 Bars On Site</span>
+        <span class="highlight-tag">🏆 Competitive</span>
+      </div>
+      <div class="event-actions">
+        <a href="https://flightclubdarts.com/location-shoreditch" target="_blank" rel="noopener" class="action-btn venue-btn">🔗 Venue</a>
+        <button class="action-btn cal-btn" onclick="addToCalendar('Flight Club Darts','Flight Club, 2A Worship Street, Shoreditch, London EC2A 2AH','2026-05-03T14:30:00','2026-05-03T16:00:00','Social darts with auto-scoring. Bars on site.')">📅 Add to Calendar</button>
+      </div>
+    </div>
+
+    <!-- Boom Labs -->
+    <div class="event-card">
+      <div class="event-header">
+        <div class="event-icon">💥</div>
+        <div class="event-meta">
+          <div class="event-time">4:15pm – 6pm</div>
+          <div class="event-title">Boom Labs</div>
+          <div class="event-venue">Shoreditch · <a href="https://feverup.com/m/503143" target="_blank" rel="noopener">View event</a></div>
+        </div>
+      </div>
+      <div class="event-desc">
+        Laser mazes, platform jumping, target smashing, team puzzles — 75 mins of chaos across six themed rooms. Wear comfy shoes. Ends with a paint bomb — t-shirts provided!
+      </div>
+      <div class="event-highlights">
+        <span class="highlight-tag">🏃 Active</span>
+        <span class="highlight-tag">🧩 Team Puzzles</span>
+        <span class="highlight-tag">💣 Paint Bomb Finale</span>
+        <span class="highlight-tag">👟 Comfy Shoes!</span>
+      </div>
+      <div class="event-actions">
+        <a href="https://feverup.com/m/503143" target="_blank" rel="noopener" class="action-btn venue-btn">🔗 Event</a>
+        <button class="action-btn cal-btn" onclick="addToCalendar('Boom Labs','Boom Labs, 83 Rivington Street, Shoreditch, London EC2A 3AY','2026-05-03T16:15:00','2026-05-03T18:00:00','Laser mazes, team puzzles & paint bomb finale. Wear comfy shoes!')">📅 Add to Calendar</button>
+      </div>
+    </div>
+
+    <!-- Alexander the Great -->
+    <div class="event-card">
+      <div class="event-header">
+        <div class="event-icon">🫒</div>
+        <div class="event-meta">
+          <div class="event-time">6:30pm – 8:30pm</div>
+          <div class="event-title">Alexander the Great</div>
+          <div class="event-venue">Camden · <a href="https://alexanderthegreatgreekrestaurant.co.uk/en" target="_blank" rel="noopener">View restaurant</a></div>
+        </div>
+      </div>
+      <div class="event-desc">
+        Greek feast on a charcoal grill. Mezze platters — meat, seafood, or veggie. Family-run for 20+ years with seriously good reviews. Perfect for Greek-themed gods.
+      </div>
+      <div class="event-highlights">
+        <span class="highlight-tag">🔥 Charcoal Grill</span>
+        <span class="highlight-tag">🥗 Mezze Platters</span>
+        <span class="highlight-tag">🌿 Veggie Options</span>
+      </div>
+      <div class="event-actions">
+        <a href="https://alexanderthegreatgreekrestaurant.co.uk/en" target="_blank" rel="noopener" class="action-btn venue-btn">🔗 Restaurant</a>
+        <button class="action-btn cal-btn" onclick="addToCalendar('Alexander the Great','Alexander the Great, 8 Plender Street, Camden, London NW1 0JT','2026-05-03T18:30:00','2026-05-03T20:30:00','Greek feast — mezze platters, meat, seafood or veggie.')">📅 Add to Calendar</button>
+      </div>
+    </div>
+
+    <!-- The Cock Tavern -->
+    <div class="event-card">
+      <div class="event-header">
+        <div class="event-icon">🍻</div>
+        <div class="event-meta">
+          <div class="event-time">Late Night</div>
+          <div class="event-title">The Cock Tavern</div>
+          <div class="event-venue">Vauxhall · <a href="https://www.thecocktavernlondon.com/" target="_blank" rel="noopener">View venue</a></div>
+        </div>
+      </div>
+      <div class="event-desc">
+        Cocktails, disco ball, good vibes, no nonsense. Open til 2am. A proper end to a proper weekend.
+      </div>
+      <div class="event-highlights">
+        <span class="highlight-tag">🍹 Cocktails</span>
+        <span class="highlight-tag">🪩 Disco Ball</span>
+        <span class="highlight-tag">🌙 Til 2am</span>
+      </div>
+      <div class="event-actions">
+        <a href="https://www.thecocktavernlondon.com/" target="_blank" rel="noopener" class="action-btn venue-btn">🔗 Venue</a>
+        <button class="action-btn cal-btn" onclick="addToCalendar('The Cock Tavern','The Cock Tavern, 340 Kennington Road, Vauxhall, London SE11 4LD','2026-05-03T21:00:00','2026-05-04T02:00:00','Cocktails, disco ball & good vibes til 2am.')">📅 Add to Calendar</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer-section">
+    <div class="footer-emoji"><span>🥳</span><span>🎉</span><span>🍾</span></div>
+    <div class="footer-card">
+      <h3>Got Questions?</h3>
+      <p>Drop a message in the WhatsApp group — we're here to help!</p>
+      <div class="whatsapp-note">💬 Ask in the group chat</div>
+      <p style="margin-top: 1.2rem;">Dietary requirements have been noted and we'll confirm with venues and reach out to individuals.</p>
+      <p style="margin-top: 1rem; opacity: 0.6; font-size: 0.85rem;">It's going to be a legendary weekend. 🙌</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===== Add to Calendar (generates .ics file) =====
+function addToCalendar(title, location, start, end, description) {
+  const formatDate = (d) => d.replace(/[-:]/g, '').replace('T', 'T') + '00';
+  // London is BST (UTC+1) in May
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Stag Do//EN',
+    'BEGIN:VEVENT',
+    'DTSTART;TZID=Europe/London:' + formatDate(start),
+    'DTEND;TZID=Europe/London:' + formatDate(end),
+    'SUMMARY:' + title,
+    'LOCATION:' + location,
+    'DESCRIPTION:' + description.replace(/,/g, '\\,'),
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\r\n');
+
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = title.replace(/[^a-zA-Z0-9]/g, '_') + '.ics';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ===== Confetti Burst =====
+(function() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  const colors = ['#ff2d87', '#ff6b35', '#7b2ff7', '#ffd700', '#00d4ff', '#39ff14', '#ff69b4'];
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function createParticle(fromTop) {
+    return {
+      x: Math.random() * canvas.width,
+      y: fromTop ? Math.random() * canvas.height * 0.4 : -20,
+      w: Math.random() * 10 + 4,
+      h: Math.random() * 6 + 3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vy: Math.random() * 3 + 1.5,
+      vx: (Math.random() - 0.5) * 3,
+      rotation: Math.random() * 360,
+      rotationSpeed: (Math.random() - 0.5) * 12,
+      opacity: 1,
+      shape: Math.random() > 0.5 ? 'rect' : 'circle'
+    };
+  }
+
+  for (let i = 0; i < 200; i++) {
+    particles.push(createParticle(true));
+  }
+
+  let frame = 0;
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    frame++;
+
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rotation += p.rotationSpeed;
+      p.vy += 0.03;
+      p.vx *= 0.999;
+      if (frame > 80) p.opacity -= 0.006;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate((p.rotation * Math.PI) / 180);
+      ctx.globalAlpha = Math.max(0, p.opacity);
+      ctx.fillStyle = p.color;
+
+      if (p.shape === 'circle') {
+        ctx.beginPath();
+        ctx.arc(0, 0, p.w / 2, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      }
+      ctx.restore();
+    });
+
+    particles = particles.filter(p => p.opacity > 0 && p.y < canvas.height + 50);
+
+    if (particles.length > 0) {
+      requestAnimationFrame(animate);
+    }
+  }
+  animate();
+})();
+
+// ===== Floating Particles Background =====
+(function() {
+  const container = document.getElementById('particles');
+  const colors = ['var(--pink)', 'var(--purple)', 'var(--orange)', 'var(--gold)'];
+
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 6 + 2;
+    p.style.width = size + 'px';
+    p.style.height = size + 'px';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.animationDuration = (Math.random() * 15 + 10) + 's';
+    p.style.animationDelay = (Math.random() * 20) + 's';
+    container.appendChild(p);
+  }
+})();
+
+// Scroll reveal removed — all cards visible immediately
+
+// ===== Tilt Effect on Cards =====
+(function() {
+  if (window.matchMedia('(hover: hover)').matches) {
+    document.querySelectorAll('.event-card').forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const rotateX = (y - centerY) / centerY * -3;
+        const rotateY = (x - centerX) / centerX * 3;
+        card.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.01)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = '';
+      });
+    });
+  }
+})();
+
+// ===== Sparkle Trail on Mouse Move =====
+(function() {
+  if (window.matchMedia('(hover: hover)').matches) {
+    let throttle = 0;
+    document.addEventListener('mousemove', (e) => {
+      if (Date.now() - throttle < 80) return;
+      throttle = Date.now();
+      const spark = document.createElement('div');
+      spark.style.cssText = `
+        position: fixed;
+        left: ${e.clientX}px;
+        top: ${e.clientY}px;
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        background: ${['#ff2d87','#ffd700','#7b2ff7','#ff6b35'][Math.floor(Math.random()*4)]};
+        pointer-events: none;
+        z-index: 999;
+        animation: sparkle 0.6s ease-out forwards;
+      `;
+      document.body.appendChild(spark);
+      setTimeout(() => spark.remove(), 600);
+    });
+  }
+})();
+</script>
+
+</body>
+</html>
