@@ -687,7 +687,7 @@
       <div class="event-header">
         <div class="event-icon">🥂</div>
         <div class="event-meta">
-          <div class="event-time">12pm</div>
+          <div class="event-time">12pm – 2pm</div>
           <div class="event-title">Drag Brunch</div>
           <div class="event-venue">Dalston Superstore, Kingsland High St</div>
         </div>
@@ -823,7 +823,7 @@
 // ===== Add to Calendar =====
 function addToCalendar(title, location, start, end, description) {
   // Format: 20260502T130000
-  const fmt = (d) => d.replace(/[-:]/g, '') + '00';
+  const fmt = (d) => d.replace(/[-:]/g, '');
   const uid = 'stagdo-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '@stag-itinerary';
   const esc = (s) => s.replace(/[,;\\]/g, (m) => '\\' + m);
 
