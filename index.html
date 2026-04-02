@@ -552,8 +552,117 @@
     .highlight-tag { background: #f0e8ff; border-color: #ccc; }
   }
 </style>
+  /* ===== Password Gate ===== */
+  .password-gate {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--purple) 0%, var(--pink) 50%, var(--orange) 100%);
+  }
+
+  .password-box {
+    text-align: center;
+    padding: 2.5rem;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 24px;
+    max-width: 400px;
+    width: 90%;
+  }
+
+  .password-box h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .password-box p {
+    font-size: 0.9rem;
+    opacity: 0.7;
+    margin-bottom: 1.5rem;
+  }
+
+  .password-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    color: #fff;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 12px;
+    outline: none;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  .password-input::placeholder { color: rgba(255,255,255,0.4); }
+  .password-input:focus { border-color: rgba(255,255,255,0.6); }
+
+  .password-submit {
+    width: 100%;
+    padding: 0.75rem;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, var(--pink), var(--purple));
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .password-submit:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(255,45,135,0.4);
+  }
+
+  .password-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .password-error {
+    color: #ff6b6b;
+    font-size: 0.85rem;
+    margin-top: 0.75rem;
+    min-height: 1.2rem;
+  }
+
+  .password-box .lock-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    display: block;
+  }
+
+  .site-content { display: none; }
+  .site-content.unlocked { display: block; }
+</style>
 </head>
 <body>
+
+<!-- Password Gate -->
+<div class="password-gate" id="passwordGate">
+  <div class="password-box">
+    <span class="lock-icon">🔒</span>
+    <h2>Jack & Zosim's Stag Do</h2>
+    <p>Enter the password to view the itinerary</p>
+    <form id="passwordForm" onsubmit="return checkPassword(event)">
+      <input type="password" class="password-input" id="passwordInput" placeholder="Password" autocomplete="off" autofocus>
+      <button type="submit" class="password-submit" id="passwordSubmit">Let me in</button>
+    </form>
+    <div class="password-error" id="passwordError"></div>
+  </div>
+</div>
+
+<!-- Site Content (hidden until unlocked) -->
+<div class="site-content" id="siteContent">
 
 <!-- Floating Particles Background -->
 <div class="particles" id="particles"></div>
@@ -993,7 +1102,129 @@ function addToCalendar(title, location, start, end, description) {
     });
   }
 })();
+
+// ===== Password Protection =====
+// SHA-256 hash of the password (not storing plaintext in source)
+const PASSWORD_HASH = '113cc7f452f891e4d7a0963222b33cd1ed0ad18cb9864d837c1f69d74e6ea5de';
+const SESSION_KEY = 'stagdo_session';
+const ATTEMPTS_KEY = 'stagdo_attempts';
+const LOCKOUT_KEY = 'stagdo_lockout';
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MS = 5 * 60 * 1000; // 5 min lockout
+const SESSION_DAYS = 30;
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function getAttempts() {
+  try { return JSON.parse(localStorage.getItem(ATTEMPTS_KEY)) || { count: 0, first: 0 }; }
+  catch { return { count: 0, first: 0 }; }
+}
+
+function isLockedOut() {
+  const lockout = parseInt(localStorage.getItem(LOCKOUT_KEY) || '0');
+  if (lockout && Date.now() < lockout) return lockout;
+  if (lockout) { localStorage.removeItem(LOCKOUT_KEY); localStorage.removeItem(ATTEMPTS_KEY); }
+  return false;
+}
+
+function unlock() {
+  document.getElementById('passwordGate').style.display = 'none';
+  document.getElementById('siteContent').classList.add('unlocked');
+  localStorage.removeItem(ATTEMPTS_KEY);
+  localStorage.removeItem(LOCKOUT_KEY);
+}
+
+// Check for valid session on load
+(async function() {
+  const session = localStorage.getItem(SESSION_KEY);
+  if (session) {
+    try {
+      const { hash, expires } = JSON.parse(session);
+      if (hash === PASSWORD_HASH && Date.now() < expires) {
+        unlock();
+        return;
+      }
+    } catch {}
+    localStorage.removeItem(SESSION_KEY);
+  }
+
+  // Check lockout state on load
+  const lockUntil = isLockedOut();
+  if (lockUntil) {
+    updateLockoutUI(lockUntil);
+  }
+})();
+
+function updateLockoutUI(lockUntil) {
+  const btn = document.getElementById('passwordSubmit');
+  const err = document.getElementById('passwordError');
+  const input = document.getElementById('passwordInput');
+  btn.disabled = true;
+  input.disabled = true;
+
+  const tick = () => {
+    const remaining = Math.max(0, lockUntil - Date.now());
+    if (remaining <= 0) {
+      btn.disabled = false;
+      input.disabled = false;
+      err.textContent = '';
+      localStorage.removeItem(LOCKOUT_KEY);
+      localStorage.removeItem(ATTEMPTS_KEY);
+      return;
+    }
+    const mins = Math.floor(remaining / 60000);
+    const secs = Math.ceil((remaining % 60000) / 1000);
+    err.textContent = `Too many attempts. Try again in ${mins}:${secs.toString().padStart(2, '0')}`;
+    setTimeout(tick, 1000);
+  };
+  tick();
+}
+
+async function checkPassword(e) {
+  e.preventDefault();
+
+  const lockUntil = isLockedOut();
+  if (lockUntil) { updateLockoutUI(lockUntil); return false; }
+
+  const input = document.getElementById('passwordInput');
+  const err = document.getElementById('passwordError');
+  const pw = input.value;
+
+  if (!pw) { err.textContent = 'Please enter the password'; return false; }
+
+  const hash = await sha256(pw);
+
+  if (hash === PASSWORD_HASH) {
+    localStorage.setItem(SESSION_KEY, JSON.stringify({
+      hash: PASSWORD_HASH,
+      expires: Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000
+    }));
+    unlock();
+  } else {
+    const attempts = getAttempts();
+    attempts.count++;
+    if (attempts.count === 1) attempts.first = Date.now();
+    localStorage.setItem(ATTEMPTS_KEY, JSON.stringify(attempts));
+
+    if (attempts.count >= MAX_ATTEMPTS) {
+      const lockUntil = Date.now() + LOCKOUT_MS;
+      localStorage.setItem(LOCKOUT_KEY, lockUntil.toString());
+      updateLockoutUI(lockUntil);
+    } else {
+      const remaining = MAX_ATTEMPTS - attempts.count;
+      err.textContent = `Wrong password. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`;
+      input.value = '';
+      input.focus();
+    }
+  }
+  return false;
+}
 </script>
+
+</div><!-- /site-content -->
 
 </body>
 </html>
