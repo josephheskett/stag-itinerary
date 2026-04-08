@@ -45,6 +45,14 @@ const shell = `<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Jack & Zosim's Stag Do</title>
+<meta property="og:title" content="Jack & Zosim's Stag Do">
+<meta property="og:description" content="2nd & 3rd May 2026 — London. You're invited!">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://stag-itinerary.vercel.app">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Jack & Zosim's Stag Do">
+<meta name="twitter:description" content="2nd & 3rd May 2026 — London. You're invited!">
+<meta name="theme-color" content="#7b2ff7">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Playfair+Display:wght@700;900&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
